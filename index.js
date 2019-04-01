@@ -26,13 +26,14 @@ bot.on('callback_query', (ctx) => {
 
 bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 	let message = inlineQuery.query
-	let result = ['❓', '❗️', '❤️', '😏', '😅'].map(function (x) {
+	let result = ['❓', '❗️', '❤️', '😏', '😅', '█'].map(function (x) {
+		let text = (x !== '█') ? message : message.replace(/./g, x)
 		return {
 			type: 'article',
 			id: crypto.createHash('md5').update(message + x).digest('hex'),
-			title: x,
+			title: text,
 			input_message_content: {
-				message_text: message.split('').map(char => x).join('').toString(),
+				message_text: text,
 				parse_mode: 'Markdown'
 			},
 			reply_markup: Markup.inlineKeyboard(
@@ -47,4 +48,7 @@ bot.catch((err) => {
 	console.log('Ooops', err)
 })
 
-bot.startPolling()
+// bot.startPolling()
+
+bot.telegram.setWebhook('http://162.218.211.142:8443/telegram-hidden/')
+bot.startWebhook('/telegram-hidden', null, 5000)
