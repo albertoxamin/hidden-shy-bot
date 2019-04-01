@@ -11,23 +11,23 @@ config = {
 const telegram = new Telegram(config.token, null)
 const bot = new Telegraf(config.token)
 
-const readKeyboard = (text) => {
-	return Markup.inlineKeyboard(
-		[Markup.callbackButton('Read', text)]
-	).extra()
-}
+const readKeyboard = (text) => Markup.inlineKeyboard(
+	[Markup.callbackButton('Read', text)]
+).extra()
 
-
-bot.on('callback_query', (ctx) => {
-	let data = ctx.callbackQuery.data
-	ctx.answerCbQuery(data, true)
-})
-
+bot.on('callback_query', (ctx) => ctx.answerCbQuery(ctx.callbackQuery.data, true))
 
 bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 	let message = inlineQuery.query
+	if (message.length === 0)
+		return
+	if (Buffer.byteLength(message, 'utf8') > 64)
+		return answerInlineQuery([], {
+			switch_pm_text: 'Message can\'t exceed 64 bytes',
+			switch_pm_parameter: 'split'
+		})
 	let result = ['❓', '❗️', '❤️', '😏', '😅', '█'].map(function (x) {
-		let text = (x !== '█') ? message : message.replace(/./g, x)
+		let text = (x !== '█') ? x : message.replace(/[^ ]/g, x)
 		return {
 			type: 'article',
 			id: crypto.createHash('md5').update(message + x).digest('hex'),
@@ -44,15 +44,7 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 	return answerInlineQuery(result)
 })
 
-bot.catch((err) => {
-	console.log('Ooops', err)
-})
+bot.catch((err) => console.log('Ooops', err))
 
-// bot.startPolling()
-
-bot.launch({
-	webhook: {
-	  domain: 'http://162.218.211.142:5000',
-	  port: 5000
-	}
-  })
+const start = () => bot.startPolling(30, 100, null, start)
+start()
