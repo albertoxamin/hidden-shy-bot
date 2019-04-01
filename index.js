@@ -50,5 +50,9 @@ bot.catch((err) => {
 
 // bot.startPolling()
 
-bot.telegram.setWebhook('http://162.218.211.142:5000/telegram-hidden/')
-bot.startWebhook('/telegram-hidden', null, 5000)
+bot.launch({
+	webhook: {
+	  domain: 'http://162.218.211.142:5000',
+	  port: 5000
+	}
+  })
