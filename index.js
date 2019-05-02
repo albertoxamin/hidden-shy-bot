@@ -24,7 +24,8 @@ bot.on('callback_query', (ctx) => {
 
 bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 	let message = inlineQuery.query
-	if (message.indexOf('@rot13') === 0)
+	let usesRot = message.indexOf('@rot13') === 0
+	if (usesRot)
 		message = message.substring(7)
 	if (message.length === 0)
 		return answerInlineQuery([], {
@@ -36,18 +37,19 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 			switch_pm_text: 'Message too long',
 			switch_pm_parameter: 'split'
 		})
-	let result = (Buffer.byteLength(message, 'utf8') > 64 || message.indexOf('@rot13') === 0) ? [] : ['❓', '❗️', '❤️', '😏', '😅', '█'].map(function (x) {
+	let result = (usesRot || Buffer.byteLength(message, 'utf8') > 64) ? [] : ['❓', '❗️', '❤️', '😏', '😅', '█'].map(function (x) {
 		let text = (x !== '█') ? x : message.replace(/[^ ]/g, x)
 		return {
 			type: 'article',
 			id: crypto.createHash('md5').update(message + x).digest('hex'),
-			title: text,
+			title: x === '█' ? 'Spoiler' : x,
+			description: x === '█' ? text : '',
 			input_message_content: {
 				message_text: text,
 				parse_mode: 'Markdown'
 			},
 			reply_markup: Markup.inlineKeyboard(
-				[Markup.callbackButton('Read', message)]
+				[Markup.callbackButton('Read' + (x === '█' ? ' Spoiler' : ''), message)]
 			)
 		}
 	})
@@ -55,16 +57,20 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 	result.push({
 		type: 'article',
 		id: crypto.createHash('md5').update(message + '_rot13').digest('hex'),
-		title: rot13,
+		title: 'rot13',
+		description: rot13,
 		input_message_content: {
 			message_text: rot13,
 			parse_mode: 'Markdown'
 		},
 		reply_markup: Markup.inlineKeyboard(
-			[Markup.switchToCurrentChatButton('Decypher', '@rot13 ' + rot13), Markup.callbackButton('Delete', '__delete')]
+			[usesRot ? Markup.callbackButton('Delete', '__delete') : Markup.switchToCurrentChatButton('Decypher', '@rot13 ' + rot13)]
 		)
 	})
-	return answerInlineQuery(result)
+	return answerInlineQuery(result, (Buffer.byteLength(message, 'utf8') > 64 ? {
+		switch_pm_text: 'Message longer than 64 bytes, only rot13 available',
+		switch_pm_parameter: 'split'
+	} : {}))
 })
 
 bot.catch((err) => console.log('Ooops', err))
