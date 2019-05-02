@@ -1,11 +1,9 @@
 const Telegraf = require('telegraf')
 var { Telegram, Markup } = require('telegraf')
 const crypto = require('crypto')
-
-var config
-
-config = {
-	token: '767345631:AAFnaUU7ZiXER-5pykfduhrrGrnBYmkvOOo'
+require('dotenv').config()
+const config = {
+	token: process.env.TG
 }
 
 const telegram = new Telegram(config.token, null)
