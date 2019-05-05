@@ -32,7 +32,7 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 			switch_pm_text: 'Type something to send a hidden message',
 			switch_pm_parameter: 'split'
 		})
-	let result = (usesRot) ? [] : ['❓', '❗️', '❤️', '😏', '😅', '█'].map(function (x) {
+	let result = (usesRot || message.length > 256) ? [] : ['❓', '❗️', '❤️', '😏', '😅'].map(function (x) {
 		let text = (x !== '█') ? x : message.replace(/[^ ]/g, x)
 		let i = 0
 		return {
@@ -63,7 +63,10 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 			)
 		})
 	}
-	return answerInlineQuery(result)
+	return answerInlineQuery(result, (message.length > 250 ? {
+		switch_pm_text: 'Message too long!',
+		switch_pm_parameter: 'split'
+	} : {}))
 })
 
 bot.catch((err) => console.log('Ooops', err))
