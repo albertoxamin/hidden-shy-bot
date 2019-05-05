@@ -32,13 +32,9 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 			switch_pm_text: 'Type something to send a hidden message',
 			switch_pm_parameter: 'split'
 		})
-	if (message.length > 250)
-		return answerInlineQuery([], {
-			switch_pm_text: 'Message too long',
-			switch_pm_parameter: 'split'
-		})
-	let result = (usesRot || Buffer.byteLength(message, 'utf8') > 64) ? [] : ['❓', '❗️', '❤️', '😏', '😅', '█'].map(function (x) {
+	let result = (usesRot) ? [] : ['❓', '❗️', '❤️', '😏', '😅', '█'].map(function (x) {
 		let text = (x !== '█') ? x : message.replace(/[^ ]/g, x)
+		let i = 0
 		return {
 			type: 'article',
 			id: crypto.createHash('md5').update(message + x).digest('hex'),
@@ -48,29 +44,26 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 				message_text: text,
 				parse_mode: 'Markdown'
 			},
-			reply_markup: Markup.inlineKeyboard(
-				[Markup.callbackButton('Read' + (x === '█' ? ' Spoiler' : ''), message)]
-			)
+			reply_markup: (Buffer.byteLength(message, 'utf8') > 64 ? Markup.inlineKeyboard(message.match(/.{1,64}/g).map(x => [Markup.callbackButton('Read pt.' + ++i, x)])) : Markup.inlineKeyboard([Markup.callbackButton('Read' + (x === '█' ? ' Spoiler' : ''), message)]))
 		}
 	})
-	let rot13 = message.replace(/[a-zA-Z]/g, function (c) { return String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26) })
-	result.push({
-		type: 'article',
-		id: crypto.createHash('md5').update(message + '_rot13').digest('hex'),
-		title: 'rot13',
-		description: rot13,
-		input_message_content: {
-			message_text: rot13,
-			parse_mode: 'Markdown'
-		},
-		reply_markup: Markup.inlineKeyboard(
-			[usesRot ? Markup.callbackButton('Delete', '__delete') : Markup.switchToCurrentChatButton('Decypher', '@rot13 ' + rot13)]
-		)
-	})
-	return answerInlineQuery(result, (Buffer.byteLength(message, 'utf8') > 64 ? {
-		switch_pm_text: 'Message longer than 64 bytes, only rot13 available',
-		switch_pm_parameter: 'split'
-	} : {}))
+	if (message.length <= 250) {
+		let rot13 = message.replace(/[a-zA-Z]/g, function (c) { return String.fromCharCode((c <= "Z" ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26) })
+		result.push({
+			type: 'article',
+			id: crypto.createHash('md5').update(message + '_rot13').digest('hex'),
+			title: 'rot13',
+			description: rot13,
+			input_message_content: {
+				message_text: rot13,
+				parse_mode: 'Markdown'
+			},
+			reply_markup: Markup.inlineKeyboard(
+				[usesRot ? Markup.callbackButton('Delete', '__delete') : Markup.switchToCurrentChatButton('Decypher', '@rot13 ' + rot13)]
+			)
+		})
+	}
+	return answerInlineQuery(result)
 })
 
 bot.catch((err) => console.log('Ooops', err))
