@@ -1,6 +1,11 @@
 {
 	"name": "hidden-shy-bot",
 	"version": 2,
+	"build": {
+		"env": {
+			"TG": "@telegram-token"
+		}
+	},
 	"builds": [
 		{
 			"src": "index.js",
