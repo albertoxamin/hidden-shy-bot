@@ -11,6 +11,7 @@
  "license": "ISC",
  "dependencies": {
   "telegraf": "^3.27.1",
-  "dotenv": "^7.0.0"
+  "dotenv": "^7.0.0",
+  "micro": "^9.3.4"
  }
 }
