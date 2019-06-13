@@ -6,8 +6,7 @@ const config = {
 	token: process.env.TG
 }
 
-const telegram = new Telegram(config.token, null)
-const bot = new Telegraf(config.token)
+const bot = new Telegraf(config.token, { telegram: { webhookReply: false } })
 
 const readKeyboard = (text) => Markup.inlineKeyboard(
 	[Markup.callbackButton('Read', text)]
@@ -76,7 +75,8 @@ const { json } = require('micro')
 module.exports = async function (req, res) {
 	try {
 		const body = await json(req)
-  		bot.handleUpdate(body)
+		console.log(body)
+		bot.handleUpdate(body)
 		res.statusCode = 200
 		res.end('')
 	} catch (e) {
